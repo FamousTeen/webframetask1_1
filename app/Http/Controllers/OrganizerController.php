@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use Carbon\Carbon;
 use App\Models\Organizers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrganizerController extends Controller
 {
@@ -11,8 +14,10 @@ class OrganizerController extends Controller
      */
     public function index()
     {
-        $organizers = Organizers::all(); // Fetch all events
-        return view('organizer.index', compact('organizers')); // Return the view with events
+        $organizersData = Organizers::query()->where('active', 1)->get();
+        return view('master_control/crud_organizer_table', [
+            'organizers' => $organizersData
+        ]);
     }
 
     /**
@@ -20,8 +25,7 @@ class OrganizerController extends Controller
      */
     public function create()
     {
-
-        return view(view: 'organizer.create'); // Return the view for creating a new organizer
+        return view('master_control/create_organizer');
     }
 
     /**
@@ -29,82 +33,90 @@ class OrganizerController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'facebook_link' => 'nullable|url',
-            'x_link' => 'nullable|url',
-            'website_link' => 'nullable|url',
-            'active' => 'boolean',
+        $request->validate([
+            'organizer_name' => 'required|max:255',
+            'facebook_link' => 'required|max:255',
+            'x_link' => 'required|max:255',
+            'website_link' => 'required|max:255',
+            'about' => 'required|max:255'
         ]);
-    
-        Organizers::create($validated);
-    
-        return redirect()->route('organizer.index')->with('success', 'Organizer created successfully.');
+
+        DB::table('organizers')->insert([
+            'name' => $request->organizer_name,
+            'facebook_link' => $request->facebook_link,
+            'description' => $request->about,
+            'x_link' => $request->x_link,
+            'website_link' => $request->website_link,
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->route('organizers.index')->with('success', 'Event updated successfully.');
     }
-    
 
     /**
      * Display the specified resource.
      */
-   /**
- * Display the specified resource.
- */
-public function show(string $id)
-{
-    $organizer = Organizers::findOrFail($id); // Fetch the organizer by ID
-    return view('organizer.show', compact('organizer')); // Return the view with the organizer data
-}
-
+    public function show(int $id)
+    {
+        $organizerData = Organizers::query()->where('organizer_id', $id)->first();
+        return view('Organizer/detail2', [
+            'organizer' => $organizerData
+        ]);
+    }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-{
-    $organizer = Organizers::findOrFail($id); // Fetch the organizer by ID
-    return view('organizer.edit', compact('organizer')); // Return the view with the organizer data
-}
-
+    {
+        $organizersData = Organizers::query()->where('organizer_id', (int)$id)->first();
+        return view('master_control/edit_organizer', [
+            'selectedOrganizer' => $organizersData
+        ]);
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-{
-    // Validate the request data
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
-        'facebook_link' => 'nullable|url',
-        'x_link' => 'nullable|url',
-        'website_link' => 'nullable|url',
-        'active' => 'boolean',
-    ]);
+    {
+        $request->validate([
+            'organizer_name' => 'required|max:255',
+            'facebook_link' => 'required|max:255',
+            'x_link' => 'required|max:255',
+            'website_link' => 'required|max:255',
+            'about' => 'required|max:255'
+        ]);
+    
+        // Find the event and update it
+        $masterEvent = Organizers::findOrFail((int)$id);
+    
+        // Update the main event
+        $masterEvent->update([
+            'name' => $request->organizer_name,
+            'facebook_link' => $request->facebook_link,
+            'description' => $request->about,
+            'x_link' => $request->x_link,
+            'website_link' => $request->website_link,
+            'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
 
-    // Find the organizer by ID
-    $organizer = Organizers::findOrFail($id);
-
-    // Update the organizer with the validated data
-    $organizer->update($validated);
-
-    // Redirect back to the organizers list with a success message
-    return redirect()->route('organizer.index')->with('success', 'Organizer updated successfully.');
-}
+        // Redirect with success message
+        return redirect()->route('organizers.index')->with('success', 'Event updated successfully.');
+    }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        $organizer = Organizers::findOrFail($id);
-        
-        // Delete the organizer and its related events
-        
-        $organizer->delete();
-    
-        // Redirect back to show.blade.php with a message
-        return redirect()->route('organizer.index')->with('success', 'Organizer deleted successfully.');
+        DB::table('organizers')
+        ->where('organizer_id', (int)$id) // Specify the condition
+        ->update([
+            'active' => 0
+        ]);
+
+        return redirect()->route('organizers.index')->with('success', 'Event updated successfully.');
     }
-    
 }

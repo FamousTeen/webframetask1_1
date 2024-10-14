@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Support\Facades\DB;
-use carbon\Carbon;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class EventCategoriesSeeder extends Seeder
 {
@@ -14,13 +14,22 @@ class EventCategoriesSeeder extends Seeder
      */
     public function run(): void
     {
-        for($i = 0; $i < 3; $i++) {
-            DB::table('event_categories')->insert(values:[
-                'name' => fake()->name(),
-                'active' => 1,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'updated_at' => Carbon::now() ->format('Y-m-d H:i:s'),
-            ]);
-        }
+        DB::table('event_categories')->insert([
+            'name' => "Expo",
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+
+        DB::table('event_categories')->insert([
+            'name' => "Concert",
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
+
+        DB::table('event_categories')->insert([
+            'name' => "Conference",
+            'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+        ]);
     }
 }
